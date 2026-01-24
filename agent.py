@@ -20,7 +20,7 @@ class Agent:
         self.epsilon = 0
         self.gamma = 0.9
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(11, 256, 3)
+        self.model = Linear_QNet(19, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         
     def get_state(self, game):
@@ -35,6 +35,7 @@ class Agent:
         dir_u = game.direction == Direction.UP
         dir_d = game.direction == Direction.DOWN
         
+        # 기본 충돌 감지 
         state = [
             (dir_r and game.is_collision(point_r)) or 
             (dir_l and game.is_collision(point_l)) or 
@@ -60,7 +61,29 @@ class Agent:
             game.food.x > game.head.x,
             game.food.y < game.head.y,
             game.food.y > game.head.y
+        ]
+        
+        # 장애물 감지 추가 (미로 모드일 때만)
+        if game.enable_maze:
+            obstacle_detection = [
+                # 직선 방향 장애물 감지
+                point_l in game.obstacles,  # 왼쪽
+                point_r in game.obstacles,  # 오른쪽
+                point_u in game.obstacles,  # 위쪽
+                point_d in game.obstacles,  # 아래쪽
+                
+                # 대각선 방향 장애물 감지
+                Point(head.x - 20, head.y - 20) in game.obstacles,  # 좌상
+                Point(head.x + 20, head.y - 20) in game.obstacles,  # 우상
+                Point(head.x - 20, head.y + 20) in game.obstacles,  # 좌하
+                Point(head.x + 20, head.y + 20) in game.obstacles,  # 우하
             ]
+        else:
+            # 미로 모드가 아닐 때는 모든 장애물 감지를 False로
+            obstacle_detection = [False] * 8
+        
+        # 상태 결합
+        state.extend(obstacle_detection)
         
         return np.array(state, dtype=int)
     
@@ -116,7 +139,15 @@ def train():
     total_score = 0
     record = 0
     agent = Agent()
-    game = SnakeGameAI()
+    # 미로 모드와 속도를 설정 가능하게 초기화
+    game = SnakeGameAI(enable_maze=True, speed=40)
+    
+    print("Snake AI Training Started!")
+    print("Controls during training:")
+    print("- M: Toggle Maze ON/OFF")
+    print("- +: Increase Speed")
+    print("- -: Decrease Speed")
+    print("- Close window to stop training")
     
     while True:
         state_old = agent.get_state(game)
@@ -139,7 +170,8 @@ def train():
                 record = score
                 agent.model.save()
                 
-            print('Game', agent.n_games, 'Score', score, 'Record:', record)
+            print('Game', agent.n_games, 'Score', score, 'Record:', record, 
+                  f'Maze: {"ON" if game.enable_maze else "OFF"}', f'Speed: {game.speed}')
             
             plot_scores.append(score)
             total_score += score
