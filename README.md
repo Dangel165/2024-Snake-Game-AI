@@ -1,4 +1,4 @@
-# 🐍 Snake Game AI with Deep Q-Learning
+# 🐍 Snake Game AI 
 
 PyTorch를 사용한 강화학습 기반 스네이크 게임 AI입니다.
 
