@@ -186,6 +186,7 @@ pip install matplotlib ipython
 - [Deep Q-Learning 논문](https://arxiv.org/abs/1312.5602)
 - [PyTorch 공식 문서](https://pytorch.org/docs/)
 - [강화학습 기초](https://www.youtube.com/watch?v=2pWv7GOvuf0)
+- [클로드 AI]
 
 ## 📄 라이선스
 
