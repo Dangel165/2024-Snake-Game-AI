@@ -17,12 +17,44 @@ class Linear_QNet(nn.Module):
         return x
     
     def save(self, file_name='model.pth'):
-        model_folder_path = './model'
-        if not os.path.exists(model_folder_path):
-            os.makedirs(model_folder_path)
+        import os
+        
+        # 절대 경로로 model 폴더 생성
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_folder_path = os.path.join(current_dir, 'model')
+        
+        try:
+            # 폴더가 없으면 생성 
+            os.makedirs(model_folder_path, exist_ok=True)
+            print(f"Model directory ensured: {model_folder_path}")
+                
+            file_path = os.path.join(model_folder_path, file_name)
+            torch.save(self.state_dict(), file_path)
+            print(f"Model saved successfully to: {file_path}")
             
-        file_name = os.path.join(model_folder_path, file_name)
-        torch.save(self.state_dict(), file_name)
+            # 파일이 실제로 생성되었는지 확인
+            if os.path.exists(file_path):
+                file_size = os.path.getsize(file_path)
+                print(f"File size: {file_size} bytes")
+                return True
+            else:
+                print("Warning: File was not created!")
+                return False
+                
+        except PermissionError as e:
+            print(f"Permission error: {e}")
+            # 현재 디렉토리에 저장 시도
+            try:
+                fallback_path = os.path.join(current_dir, file_name)
+                torch.save(self.state_dict(), fallback_path)
+                print(f"Model saved to fallback location: {fallback_path}")
+                return True
+            except Exception as fallback_error:
+                print(f"Fallback save failed: {fallback_error}")
+                return False
+        except Exception as e:
+            print(f"Error saving model: {e}")
+            return False
 
 
 class QTrainer:
